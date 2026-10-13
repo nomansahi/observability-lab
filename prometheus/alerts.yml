@@ -1,0 +1,22 @@
+groups:
+  - name: site_probe_availability
+    rules:
+      - alert: SiteProbeFailed
+        expr: (probe_success{job="site_probe"} == 0) and on (job, instance) (up{job="site_probe"} == 1)
+        for: 0m
+        annotations:
+          summary: "HTTP probe failed for {{ $labels.instance }}"
+          description: "The probe was scraped, but its HTTP check failed. Check the URL, DNS, TLS, connectivity, and probe configuration."
+
+      - alert: SiteProbeScrapeFailed
+        expr: up{job="site_probe"} == 0
+        for: 0m
+        annotations:
+          summary: "Probe scrape failed for {{ $labels.instance }}"
+          description: "Prometheus could not scrape the probe endpoint. Check the Prometheus target error, scrape address, exporter, and connectivity."
+      - alert: SiteProbeResultMissing
+        expr: (up{job="site_probe"} == 1) unless on (job, instance) probe_success{job="site_probe"}
+        for: 0m
+        annotations:
+          summary: "Probe result missing for {{ $labels.instance }}"
+          description: "The scrape succeeded, but probe_success is missing. Check the probe endpoint, module settings, and metric filtering."

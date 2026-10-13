@@ -1,0 +1,23 @@
+groups:
+  - name: practice_app_recording
+    rules:
+      - record: instance:app_http_requests:rate5m
+        expr: |
+          sum by (job, instance) (
+            rate(app_http_requests_total{job="practice_app"}[5m])
+          )
+
+      - record: instance:app_http_errors:rate5m
+        expr: |
+          sum by (job, instance) (
+            rate(app_http_requests_total{job="practice_app",status=~"5.."}[5m])
+          )
+
+      - record: instance:app_http_request_duration_seconds:p95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (job, instance, le) (
+              rate(app_http_request_duration_seconds_bucket{job="practice_app"}[5m])
+            )
+          )
